@@ -27,13 +27,11 @@
   http://www.arduino.cc/en/Tutorial/AnalogInput
 */
 
-int sensorPin = A1;    // select the input pin for the potentiometer
-int ledPin = 13;      // select the pin for the LED
+int sensorPin = A4;    // select the input pin for the potentiometer
 int sensorValue = 0;  // variable to store the value coming from the sensor
 
 void setup() {
   // declare the ledPin as an OUTPUT:
-  pinMode(ledPin, OUTPUT);
   Serial.begin(9600);
 }
 
@@ -42,12 +40,6 @@ void loop() {
   sensorValue = analogRead(sensorPin);
   Serial.println(sensorValue);
 
-  if(sensorValue > 5){
-    digitalWrite(ledPin,HIGH);
-  }
-  else{
-    digitalWrite(ledPin, LOW);
-  }
   
   
 }
