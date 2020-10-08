@@ -19,7 +19,9 @@ void loop()
     rawThrottle = 20;
 
   }
-  esc.write(rawThrottle);
+  // esc.write(rawThrottle);
+  esc.write(30);
+
 
   // 58 to 171
 
