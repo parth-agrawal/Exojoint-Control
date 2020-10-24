@@ -1,6 +1,7 @@
+// THIS IS THE GOOD ONE
+
 #include <Servo.h>
 #include <AS5X47.h>
-// https://github.com/Adrien-Legrand/AS5X47
 
 Servo esc;
 int throttlePin = 0;
@@ -11,14 +12,14 @@ int slaveSelectPin = 10;
 // Start connection to the sensor.
 AS5X47 as5047p(slaveSelectPin);
 float lastRevCount = 0;
-int revCount = 0;
+int revCount = 1;
 float lastAngle = 0;
 long lastTime = 0;
 float startTime = millis();
 long timeSample = 1;
 float RPM = 0;
 float rotPerSample = 0;
-boolean runClear = true;
+boolean runClear = false;
 
 void setup()
 {
@@ -28,18 +29,6 @@ void setup()
 
 void loop()
 {
-
-  float currentTime = (millis() - startTime);
-
-  long currentTimeSec = (millis() - startTime) / 1000;
-  int RPMSampLength = 1;
-  if (currentTimeSec % 3 == 0) {
-    timeSample ++;
-    rotPerSample = revCount / currentTimeSec;
-    RPM = rotPerSample * 60;
-  }
-
-  lastTime = currentTime;
 
 
   // Read the measured angle
@@ -56,15 +45,27 @@ void loop()
   Serial.print("revCount: "); Serial.print(revCount); Serial.print(" ");
   //Serial.print("lastAngle: "); Serial.print(lastAngle); Serial.print(" ");
   Serial.print("angle: "); Serial.print(angle); Serial.print(" ");
-  Serial.print("RPM: "); Serial.print(RPM); Serial.print(" ");
   Serial.println("uT");
 
-  
+  if (revCount % 20 == 0) {
+    if (runClear) {
+      esc.write(30);
+      delay(1500);
+      esc.write(70);
+      runClear = false;
+    }
+
+  }
+  else{
+    runClear = true;
+  }
+
   lastAngle = angle;
 
   esc.write(30);
 
 
+  // interesting - throttle of 70 appears to be really close to 1000 per second
 
 
 
