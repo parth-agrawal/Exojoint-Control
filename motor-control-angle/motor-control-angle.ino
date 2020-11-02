@@ -47,10 +47,10 @@ void loop()
   Serial.print("angle: "); Serial.print(angle); Serial.print(" ");
   Serial.println("uT");
 
-  if (revCount % 20 == 0) {
+  if (revCount % 3 == 0) {
     if (runClear) {
       esc.write(30);
-      delay(1500);
+      delay(3500);
       esc.write(70);
       runClear = false;
     }
