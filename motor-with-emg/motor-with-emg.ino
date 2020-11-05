@@ -3,7 +3,7 @@
 // https://github.com/Adrien-Legrand/AS5X47
 
 Servo esc;
-int emgPin = A3;
+int emgPin = A0;
 
 // Define where the CSN Pin in connected.
 int slaveSelectPin = 10;
@@ -19,7 +19,9 @@ long timeSample = 1;
 float RPM = 0;
 float rotPerSample = 0;
 boolean runClear = true;
-
+double emgMean = 0;
+double emgMovav = 0;
+int i = 0;
 void setup()
 {
   esc.attach(9);
@@ -28,24 +30,42 @@ void setup()
 
 void loop()
 {
-/*
+
   int emgValue = analogRead(emgPin);
 
   // rectifier
-  int zeroPt = 321;
+  int zeroPt = 300;
   emgValue = emgValue - zeroPt;
-  if(emgValue < 0){
+  if (emgValue < 0) {
     emgValue *= -1;
   }
-*/
+  
 
+
+
+ 
+
+
+  int meanSamples = 10;
+
+  /*
+    emgMean = emgMean + emgValue;
+    if(i == meanSamples){
+      emgMean = emgMean / meanSamples;
+      i = 0;
+    }
+    else{
+      i ++;
+    }
+  */
 
   
-  int throttle = map(emgValue, 400, 1023, 57, 63);
+  emgMovav = emgMovav * 0.80 + abs(emgValue) * 0.20; // Rectified and smoothed signal
+  
+ int throttle = map(emgMovav, 30, 80, 57, 60);
   Serial.print("throttle: "); Serial.print(throttle); Serial.print(" ");
-  Serial.print("emgValue: "); Serial.print(emgValue); Serial.print(" ");
+  Serial.print("EMG Reading: "); Serial.print(emgMovav); Serial.print(" ");
   Serial.println("");
-
 
   /*
     float currentTime = (millis() - startTime);
@@ -82,7 +102,7 @@ void loop()
 
     lastAngle = angle;
   */
-  esc.write(throttle);
+  esc.write(30);
 
 
 
