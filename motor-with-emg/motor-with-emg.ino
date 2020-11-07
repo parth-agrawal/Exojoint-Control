@@ -2,8 +2,9 @@
 #include <AS5X47.h>
 // https://github.com/Adrien-Legrand/AS5X47
 
-Servo esc;
-int emgPin = A0;
+
+
+
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -72,7 +73,31 @@ NOTCH_FREQUENCY humFreq = NOTCH_FREQ_50HZ;
 double emgMean = 0;
 double emgMovav = 0;
 int i = 0;
+
+Servo esc;
+// Define where the CSN Pin in connected.
+int slaveSelectPin = 10;
+
 int throttle = 0;
+
+// Start connection to the sensor.
+AS5X47 as5047p(slaveSelectPin);
+float lastRevCount = 0;
+int matexRevCount = 0;
+int jointRevCount = 0;
+float lastJointAngle = 0;
+float  jointAngle = 0;
+float realAngle = 0;
+float lastAngle = 0;
+long lastTime = 0;
+float startTime = millis();
+long timeSample = 1;
+float RPM = 0;
+float rotPerSample = 0;
+boolean runForward = false;
+boolean runBackward = false;
+boolean flip = false;
+
 void setup()
 {
   esc.attach(9);
@@ -96,48 +121,116 @@ void setup()
 void loop()
 {
 
-  int emgValue = analogRead(emgPin);
 
+
+  int currentTime = (millis() - startTime);
+
+  long currentTimeSec = (millis() - startTime) / 1000;
+  int RPMSampLength = 1;
+  if (currentTimeSec % 3 == 0) {
+    timeSample ++;
+    rotPerSample = matexRevCount / currentTimeSec;
+    RPM = rotPerSample * 60;
+  }
+
+
+  lastTime = currentTime;
+
+
+  // Read the measured angle
+  float angle = as5047p.readAngle();
+  //delay(50);
+
+  // Show the measure angle on the Serial Port
+  //Serial.println(angle);
+
+
+  if (lastAngle > angle + 2) {
+    matexRevCount ++;
+
+  }
   /*
-    // rectifier
-    int zeroPt = 300;
-    emgValue = emgValue - zeroPt;
-    if (emgValue < 0) {
-      emgValue *= -1;
+    if (lastAngle > angle + 0.5) {
+    flip = true;
     }
-
-    int meanSamples = 10;
-
-
   */
 
-
-
-
-
-
   /*
-    emgMean = emgMean + emgValue;
-    if(i == meanSamples){
-      emgMean = emgMean / meanSamples;
-      i = 0;
+    if(angle > lastAngle + 2){
+      runForward = true;
+    }
+  */
+  /*
+    if(lastAngle > angle + 2){
+    runBackward = true;
     }
     else{
-      i ++;
+    runBackward = false;
+    }
+  */
+  /*
+    if(flip && runBackward){
+    matexRevCount --;
+    flip = false;
+    }
+    if (flip) { // && !runBackward){
+    matexRevCount ++;
+    flip = false;
     }
   */
 
+  jointAngle = (angle / 7) + (360 / 7) * (matexRevCount % 7);
+  if (lastJointAngle > jointAngle + 2) {
+    jointRevCount ++;
+  }
 
   /*
+    realAngle = angle / 7;
+    matexRevCount = angle / (51);
 
-    emgMovav = emgMovav * 0.80 + abs(emgValue) * 0.20; // Rectified and smoothed signal
+    if (matexRevCount < 7) {
+     //realAngle +=  * matexRevCount;
+    }
+    else {
+     matexRevCount = 0;
 
-    int throttle = map(emgMovav, 30, 80, 57, 60);
-    Serial.print("throttle: "); Serial.print(throttle); Serial.print(" ");
-    Serial.print("EMG Reading: "); Serial.print(emgMovav); Serial.print(" ");
-    Serial.println("");
+    }
 
   */
+
+
+
+  Serial.print("matexRevCount: "); Serial.print(matexRevCount); Serial.print(" ");
+
+
+  Serial.print("matexRevCount: "); Serial.print(matexRevCount); Serial.print(" ");
+  Serial.print("lastAngle: "); Serial.print(lastAngle); Serial.print(" ");
+  Serial.print("angle: "); Serial.print(angle); Serial.print(" ");
+  //Serial.print("runBackward: "); Serial.print(runBackward); Serial.print(" ");
+  //Serial.print("flip: "); Serial.print(flip); Serial.print(" ");
+  // Serial.print("runForward: "); Serial.print(runForward); Serial.print(" ");
+  Serial.print("jointAngle: "); Serial.print(jointAngle); Serial.print(" ");
+  Serial.print("lastJointAngle "); Serial.print(lastJointAngle); Serial.print(" ");
+  Serial.print("jointRevCount "); Serial.print(jointRevCount); Serial.print(" ");
+
+  //Serial.print("realAngle: "); Serial.print(realAngle); Serial.print(" ");
+
+  //Serial.print("RPM: "); Serial.print(RPM); Serial.print(" ");
+  // Serial.println("uT");
+
+
+  /*
+    // every 200ms, measure the angle
+
+    if(currentTime % 2 == 0){
+      lastAngle = angle;
+      lastJointAngle = jointAngle;
+    }
+  */
+  lastAngle = angle;
+  lastJointAngle = jointAngle;
+
+
 
 
   // Note: `micros()` will overflow and reset every about 70 minutes.
@@ -145,7 +238,7 @@ void loop()
 
   // filter processing
   int data = 0, dataAfterFilter = 0;
-  
+
   for (int i = 0; i <  ARR_SIZE(SensorInputPins); i++) {
     data = analogRead(SensorInputPins[i]);
     dataAfterFilter = myFilter[i].update(data);
@@ -156,16 +249,16 @@ void loop()
     // Simple envelope calculation, use 2 * rectified value
     uint16_t envelope = CYCLE_BUF_MEAN(rectifiedAcBuf[i]) * 2;
     // throttle = map(envelope, 20, 70, 57, 65);
-    throttle = map(envelope, 20, 60, 57, 70);
-    
+    throttle = map(envelope, 16, 60, 57, 70);
+
 #if !_DEBUG
     //    SerialToUSB.print(128 + dataAfterFilter); // Draw offset = 128
     //    SerialToUSB.print(" ");
-    // SerialToUSB.print(envelope);
-    SerialToUSB.print(envelope);
+    //SerialToUSB.print(envelope);
+    //SerialToUSB.print(envelope);
 
     SerialToUSB.print(" ");
-    SerialToUSB.print(throttle);
+    //SerialToUSB.print(throttle);
     SerialToUSB.print(" ");
 #endif
   }
@@ -184,7 +277,18 @@ void loop()
 
   SerialToUSB.println();
 
-  esc.write(throttle);
+
+  // when arm is at back edge of case (not near the motor wires) and rotating toward the motor wires the angle reads 24. restart the program with the arm there (use the reset button on the arduino)
+
+  if (jointAngle > 25 && jointAngle < 253) {
+    esc.write(60);
+  }
+  else {
+    esc.write(30);
+  }
+
+
+
 
 
 
