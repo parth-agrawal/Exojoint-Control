@@ -1,9 +1,3 @@
-#include <Servo.h>
-// https://github.com/Adrien-Legrand/AS5X47
-
-
-
-
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -73,7 +67,6 @@ double emgMean = 0;
 double emgMovav = 0;
 int i = 0;
 
-Servo esc;
 // Define where the CSN Pin in connected.
 int slaveSelectPin = 10;
 
@@ -82,13 +75,12 @@ int throttle = 0;
 
 void setup()
 {
-  esc.attach(9);
   //initialization
   for (int i = 0; i < ARR_SIZE(SensorInputPins); i++) {
     myFilter[i].init(sampleRate, humFreq, true, true, true);
 
     rectifiedAcBuf[i].sum = 0;
-    rectifiedAcBuf[i].index = 0;
+    rectifiedAcBuf[i].index = 0;  
 
     for (int j = 0; j < ARR_SIZE(rectifiedAcBuf[i].buf); j++)
     {
@@ -104,8 +96,6 @@ void loop()
 {
 
 
-
-  
 
 
 
@@ -124,17 +114,15 @@ void loop()
 
     // Simple envelope calculation, use 2 * rectified value
     uint16_t envelope = CYCLE_BUF_MEAN(rectifiedAcBuf[i]) * 2;
-    SerialToUSB.print(envelope);
+    // throttle = map(envelope, 20, 70, 57, 65);
+    throttle = map(envelope, 16, 60, 57, 70);
 
 #if !_DEBUG
     //    SerialToUSB.print(128 + dataAfterFilter); // Draw offset = 128
     //    SerialToUSB.print(" ");
-    //SerialToUSB.print(envelope);
-    //SerialToUSB.print(envelope);
-
-    SerialToUSB.print(" ");
-    //SerialToUSB.print(throttle);
-    SerialToUSB.print(" ");
+    SerialToUSB.print(envelope);
+  
+    
 #endif
   }
 
