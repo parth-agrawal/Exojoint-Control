@@ -123,7 +123,7 @@ void loop()
     CYCLE_BUF_ADD(rectifiedAcBuf[i], abs(dataAfterFilter));
 
     // Simple envelope calculation, use 2 * rectified value
-    int envelope = CYCLE_BUF_MEAN(rectifiedAcBuf[i]) * 2;
+    uint16_t envelope = CYCLE_BUF_MEAN(rectifiedAcBuf[i]) * 2;
     SerialToUSB.println(envelope);
 
 #if !_DEBUG
