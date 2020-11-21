@@ -123,8 +123,8 @@ void loop()
     CYCLE_BUF_ADD(rectifiedAcBuf[i], abs(dataAfterFilter));
 
     // Simple envelope calculation, use 2 * rectified value
-    uint16_t envelope = CYCLE_BUF_MEAN(rectifiedAcBuf[i]) * 2;
-    SerialToUSB.print(envelope);
+    int envelope = CYCLE_BUF_MEAN(rectifiedAcBuf[i]) * 2;
+    SerialToUSB.println(envelope);
 
 #if !_DEBUG
     //    SerialToUSB.print(128 + dataAfterFilter); // Draw offset = 128
@@ -132,9 +132,9 @@ void loop()
     //SerialToUSB.print(envelope);
     //SerialToUSB.print(envelope);
 
-    SerialToUSB.print(" ");
+   
     //SerialToUSB.print(throttle);
-    SerialToUSB.print(" ");
+  
 #endif
   }
 
@@ -149,8 +149,6 @@ void loop()
     delay((interval - timeElapsed) / 1000);
   }
 #endif
-
-  SerialToUSB.println();
 
 
 
